@@ -1,0 +1,18 @@
+h1,
+p {
+  font-family: Lato;
+}
+
+.grid {
+  display: grid;
+  grid-template-rows: 100px 100px 100px;
+  grid-template-columns: 100px 100px 100px;
+}
+.box {
+  border: 1px solid black;
+  line-height: 100px;
+  text-align: center;
+}
+.reset {
+  margin-top: 30px;
+}

@@ -1,0 +1,28 @@
+h1,
+p {
+  font-family: Lato;
+}
+
+.rect1,
+.rect2 {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  text-align: center;
+  line-height: 100px;
+  color: #00f;
+}
+
+.wrapper {
+  position: 'relative';
+}
+
+.rect1 {
+  left: 0;
+  background-color: #0f0;
+}
+
+.rect2 {
+  right: 0;
+  background-color: #f00;
+}
