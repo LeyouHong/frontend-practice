@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.circle,
+.circle-red {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  margin: 0 8px 0 8px;
+  cursor: pointer;
+}
+
+.circle-red {
+  background-color: #f00;
+  color: #fff;
+}
+
+/* .circle:hover {
+  background-color: #f00;
+  color: #fff;
+} */
