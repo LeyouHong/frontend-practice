@@ -1,1 +1,16 @@
-./DS_Store
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Local tool state
+.codebase-memory/
+.forge-workspace/
+
+# Logs
+*.log
