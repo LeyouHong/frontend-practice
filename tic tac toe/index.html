@@ -30,7 +30,7 @@
       source = source.replace(/import\s+["']\.\/[^"']+\.css["'];?\n?/g, "");
 
       // 3. Strip local module imports
-      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+"['];?\n?/g, "");
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+["'];?\n?/g, "");
 
       // 4. Strip "const { ... } = React;" (React is already global)
       source = source.replace(/const\s+\{[^}]+\}\s*=\s*React;?\n?/g, "");
@@ -40,7 +40,7 @@
       source = source.replace(/export\s+default\s+(\w+)\s*;?/g, "window._component = $1;");
 
       // 6. Transpile with Babel
-      const result = Babel.transform(source, { presets: ["react"] });
+      const result = Babel.transform(source, { presets: [["react", { runtime: "classic" }]] });
       (new Function(result.code))();
 
       // 7. Render

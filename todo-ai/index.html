@@ -32,14 +32,14 @@
       source = source.replace(/import\s+["']\.\/[^"']+\.css["'];?\n?/g, "");
 
       // 3. Strip local module imports (constants already inlined as <script>)
-      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+"['];?\n?/g, "");
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+["'];?\n?/g, "");
 
       // 4. Strip export default (no const { } = React in this source, skip standard step4)
       source = source.replace(/export\s+default\s+function\s+(\w+)/g, "window._component = $1; function $1");
       source = source.replace(/export\s+default\s+(\w+)\s*;?/g, "window._component = $1;");
 
       // 6. Transpile with Babel
-      const result = Babel.transform(source, { presets: ["react"] });
+      const result = Babel.transform(source, { presets: [["react", { runtime: "classic" }]] });
       (new Function(result.code))();
 
       // 7. Render
