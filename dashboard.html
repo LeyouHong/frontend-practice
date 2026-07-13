@@ -7,53 +7,84 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --color-bg:              #f0f4ff;
+      --color-surface:         #ffffff;
+      --color-primary:         #0f172a;
+      --color-primary-hover:   #1e293b;
+      --color-text:            #1e293b;
+      --color-text-muted:      #64748b;
+      --color-subtitle:        #94a3b8;
+      --color-react:           #6366f1;
+      --color-vanilla:         #10b981;
+      --color-console:         #f59e0b;
+      --color-react-bg:        #eef2ff;
+      --color-react-text:      #4f46e5;
+      --color-vanilla-bg:      #ecfdf5;
+      --color-vanilla-text:    #059669;
+      --color-console-bg:      #fffbeb;
+      --color-console-text:    #d97706;
+      --color-error:           #ef4444;
+      --color-error-bg:        #fef2f2;
+      --card-radius:           14px;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #f0f2f5;
-      color: #333;
+      background: var(--color-bg);
+      color: var(--color-text);
       min-height: 100vh;
     }
 
     /* ===== Header ===== */
     .header {
-      background: #fff;
-      padding: 24px 40px;
-      border-bottom: 1px solid #e0e0e0;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      background: var(--color-primary);
+      background-image: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      padding: 28px 40px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.25);
     }
-    .header h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
-    .header .subtitle { font-size: 0.875rem; color: #888; }
+    .header h1 { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+    .header .subtitle { font-size: 0.9rem; color: var(--color-subtitle); margin-top: 4px; }
 
     /* ===== Dashboard Grid ===== */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 24px;
       padding: 40px;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
 
     .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 28px 20px;
+      position: relative;
+      background: var(--color-surface);
+      border-radius: var(--card-radius);
+      padding: 32px 20px 24px;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       user-select: none;
+      overflow: hidden;
+      border-top: 4px solid transparent;
     }
+    .card-type-react    { border-top-color: var(--color-react); }
+    .card-type-vanilla  { border-top-color: var(--color-vanilla); }
+    .card-type-console  { border-top-color: var(--color-console); }
+
     .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      transform: translateY(-4px);
     }
+    .card-type-react:hover    { box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2); }
+    .card-type-vanilla:hover  { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+    .card-type-console:hover  { box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2); }
     .card:active { transform: translateY(-1px); }
     .card .card-icon { font-size: 2rem; margin-bottom: 10px; }
-    .card .card-name { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; }
+    .card .card-name { font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
 
     /* ===== Detail View ===== */
     .detail-view {
@@ -68,17 +99,17 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #1a1a2e;
+      background: #0f172a;
       color: #fff;
       border: none;
-      padding: 10px 22px;
-      border-radius: 8px;
+      padding: 10px 24px;
+      border-radius: 9999px;
       font-size: 0.9rem;
+      font-weight: 500;
       cursor: pointer;
-      margin-bottom: 20px;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, transform 0.15s ease;
     }
-    .back-btn:hover { background: #2d2d48; }
+    .back-btn:hover { background: #1e293b; transform: translateX(-2px); }
 
     .detail-header {
       display: flex;
@@ -88,62 +119,180 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-    .detail-title { font-size: 1.3rem; font-weight: 700; }
+    .detail-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
 
     .detail-container {
       background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      min-height: 300px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 14px;
+      padding: 24px;
+      min-height: 400px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
     }
 
     .detail-container iframe {
       width: 100%;
       height: 500px;
       border: none;
+      border-radius: 8px;
     }
 
     /* ===== Console Panel ===== */
     .console-panel {
-      background: #1e1e1e;
-      border-radius: 8px;
-      padding: 16px;
+      background: #1a1a2e;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 0;
       font-family: Consolas, Monaco, "Courier New", monospace;
       font-size: 0.875rem;
-      line-height: 1.6;
+      line-height: 1.7;
       max-height: 500px;
       overflow-y: auto;
       color: #d4d4d4;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
-    .console-panel .log-line { margin: 0; white-space: pre-wrap; word-break: break-all; }
-    .console-panel .log-line.log   { color: #4ec9b0; }
-    .console-panel .log-line.error { color: #f44747; }
-    .console-panel .log-line.warn  { color: #dcdcaa; }
-    .console-panel .log-line .prefix {
-      color: #888;
-      margin-right: 6px;
-      font-weight: bold;
+    .console-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #334155;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .console-panel-header::before {
+      content: ">_";
+      color: #4ade80;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .console-panel-body {
+      padding: 16px 20px;
+    }
+    .console-panel .log-line { display: block; white-space: pre-wrap; word-break: break-all; }
+    .console-panel .log-line + .log-line { margin-top: 3px; }
+    .console-panel .log-line .prefix { margin-right: 8px; font-weight: 700; }
+    .console-panel .log-line.log   .prefix { color: #4ade80; }
+    .console-panel .log-line.error .prefix { color: #f87171; }
+    .console-panel .log-line.warn  .prefix { color: #fbbf24; }
+    .console-panel .log-line.log   { color: #e2e8f0; }
+    .console-panel .log-line.error { color: #fecaca; }
+    .console-panel .log-line.warn  { color: #fef3c7; }
+
+    .console-no-output {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: #64748b;
+      text-align: center;
+      gap: 10px;
+    }
+    .console-no-output .no-output-icon {
+      font-size: 2rem;
+      opacity: 0.5;
+    }
+    .console-no-output .no-output-text {
+      font-size: 0.9rem;
+      font-weight: 500;
     }
 
-    /* ===== Loading & Messages ===== */
-    .loading-msg {
-      text-align: center;
-      padding: 40px;
-      color: #888;
-      font-size: 0.95rem;
+    /* ===== Loading Skeleton ===== */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
     }
-    .error-msg {
-      text-align: center;
-      padding: 40px;
-      color: #f44747;
-      font-size: 0.95rem;
+    .skeleton-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 8px 0;
     }
+    .skeleton-block {
+      height: 18px;
+      border-radius: 8px;
+      background: #e2e8f0;
+      background-image: linear-gradient(
+        90deg,
+        #e2e8f0 0%,
+        #f1f5f9 40%,
+        #e2e8f0 80%
+      );
+      background-size: 400px 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    .skeleton-block:nth-child(1) { width: 75%; }
+    .skeleton-block:nth-child(2) { width: 55%; }
+    .skeleton-block:nth-child(3) { width: 90%; height: 14px; }
+
+    /* ===== Error State ===== */
+    .error-container {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .error-container .error-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .error-container .error-text {
+      color: #991b1b;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Legacy aliases kept for any dynamic use */
+    /* ===== Card Type Badge ===== */
+    .card-type-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      line-height: 1.5;
+    }
+    .card-type-react .card-type-badge   { background: var(--color-react-bg);  color: var(--color-react-text); }
+    .card-type-vanilla .card-type-badge { background: var(--color-vanilla-bg); color: var(--color-vanilla-text); }
+    .card-type-console .card-type-badge { background: var(--color-console-bg); color: var(--color-console-text); }
+
+    /* ===== Card Description ===== */
+    .card-description {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+
+    .loading-msg { display: none; }
+    .error-msg { display: none; }
 
     /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); padding: 32px 24px; gap: 20px; }
+    }
     @media (max-width: 600px) {
-      .dashboard-grid { padding: 20px; gap: 12px; }
+      .dashboard-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); padding: 20px 16px; gap: 14px; }
+      .header { padding: 20px 16px; }
+      .header h1 { font-size: 1.2rem; }
+      .header .subtitle { font-size: 0.8rem; }
+      .card { padding: 24px 14px 18px; }
       .detail-view { padding: 12px 16px 24px; }
+      .detail-header { flex-direction: column; align-items: flex-start; }
+      .detail-container { padding: 16px; }
     }
   </style>
 
@@ -179,23 +328,23 @@
     // EXAMPLE REGISTRY
     // =====================================================================
     const EXAMPLES = [
-      { dir: "autocpmplate",    name: "Auto Complete",      type: "vanilla", icon: "\u270D\uFE0F" },
-      { dir: "calendar",         name: "Calendar",           type: "vanilla", icon: "\uD83D\uDCC5" },
-      { dir: "collapse",         name: "Collapse",           type: "react",   icon: "\uD83D\uDCCB" },
-      { dir: "currying",         name: "Currying",           type: "console", icon: "\uD83D\uDCBB" },
-      { dir: "debounce",         name: "Debounce",           type: "vanilla", icon: "\u23F1\uFE0F" },
-      { dir: "draggle",          name: "Draggable",          type: "react",   icon: "\u2194\uFE0F" },
-      { dir: "eventloop_example",name: "Event Loop Example", type: "console", icon: "\uD83D\uDD01" },
-      { dir: "five_stars_rating",name: "Five Stars Rating",  type: "react",   icon: "\u2B50" },
-      { dir: "infinity_scroll",  name: "Infinite Scroll",    type: "react",   icon: "\u2193\uFE0F" },
-      { dir: "keyboard",         name: "Keyboard",           type: "vanilla", icon: "\u2328\uFE0F" },
-      { dir: "limit_tasks",      name: "Limit Tasks",        type: "vanilla", icon: "\u26D4" },
-      { dir: "rendor1000data",   name: "Render 1000 Data",   type: "vanilla", icon: "\uD83D\uDCCA" },
-      { dir: "spiral-grid",      name: "Spiral Grid",        type: "vanilla", icon: "\uD83E\uDDE9" },
-      { dir: "throttle",         name: "Throttle",           type: "vanilla", icon: "\u26A1" },
-      { dir: "tic tac toe",      name: "Tic-Tac-Toe",        type: "react",   icon: "\u274C\u2B55" },
-      { dir: "todo-ai",          name: "Todo List",          type: "react",   icon: "\u2705" },
-      { dir: "user-form",        name: "User Form",          type: "react",   icon: "\uD83D\uDCDD" },
+      { dir: "autocpmplate",    name: "Auto Complete",      type: "vanilla", icon: "\u270D\uFE0F", description: "Type-ahead suggestion dropdown with keyboard navigation" },
+      { dir: "calendar",         name: "Calendar",           type: "vanilla", icon: "\uD83D\uDCC5", description: "Monthly date picker with navigation controls" },
+      { dir: "collapse",         name: "Collapse",           type: "react",   icon: "\uD83D\uDCCB", description: "Accordion-style expandable/collapsible panels" },
+      { dir: "currying",         name: "Currying",           type: "console", icon: "\uD83D\uDCBB", description: "Compose functions using currying pattern" },
+      { dir: "debounce",         name: "Debounce",           type: "vanilla", icon: "\u23F1\uFE0F", description: "Debounced input with configurable delay" },
+      { dir: "draggle",          name: "Draggable",          type: "react",   icon: "\u2194\uFE0F", description: "Drag and drop elements built with React" },
+      { dir: "eventloop_example",name: "Event Loop Example", type: "console", icon: "\uD83D\uDD01", description: "Visualize microtask vs macrotask execution order" },
+      { dir: "five_stars_rating",name: "Five Stars Rating",  type: "react",   icon: "\u2B50", description: "Interactive star rating component" },
+      { dir: "infinity_scroll",  name: "Infinite Scroll",    type: "react",   icon: "\u2193\uFE0F", description: "Infinite scroll with dynamic data loading" },
+      { dir: "keyboard",         name: "Keyboard",           type: "vanilla", icon: "\u2328\uFE0F", description: "Virtual keyboard with key event handling" },
+      { dir: "limit_tasks",      name: "Limit Tasks",        type: "vanilla", icon: "\u26D4", description: "Task queue with configurable concurrency limit" },
+      { dir: "rendor1000data",   name: "Render 1000 Data",   type: "vanilla", icon: "\uD83D\uDCCA", description: "Efficient rendering of 1,000 data rows" },
+      { dir: "spiral-grid",      name: "Spiral Grid",        type: "vanilla", icon: "\uD83E\uDDE9", description: "CSS Grid spiral layout pattern" },
+      { dir: "throttle",         name: "Throttle",           type: "vanilla", icon: "\u26A1", description: "Throttled event handler with configurable rate" },
+      { dir: "tic tac toe",      name: "Tic-Tac-Toe",        type: "react",   icon: "\u274C\u2B55", description: "Classic Tic-Tac-Toe game built with React" },
+      { dir: "todo-ai",          name: "Todo List",          type: "react",   icon: "\u2705", description: "AI-powered todo list with CRUD operations" },
+      { dir: "user-form",        name: "User Form",          type: "react",   icon: "\uD83D\uDCDD", description: "Dynamic user registration form with validation" },
     ];
 
     // =====================================================================
@@ -214,8 +363,13 @@
       gridEl.innerHTML = "";
       EXAMPLES.forEach((ex) => {
         const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<div class="card-icon">${ex.icon}</div><div class="card-name">${ex.name}</div>`;
+        card.className = "card card-type-" + ex.type;
+        const typeLabel = ex.type.charAt(0).toUpperCase() + ex.type.slice(1);
+        card.innerHTML =
+          '<span class="card-type-badge">' + typeLabel + '</span>'
+          + '<div class="card-icon">' + ex.icon + '</div>'
+          + '<div class="card-name">' + ex.name + '</div>'
+          + '<div class="card-description">' + (ex.description || "") + '</div>';
         card.addEventListener("click", () => openExample(ex));
         gridEl.appendChild(card);
       });
@@ -258,11 +412,18 @@
     }
 
     function showLoading() {
-      detailCont.innerHTML = '<div class="loading-msg">Loading example...</div>';
+      detailCont.innerHTML = '<div class="skeleton-container">'
+        + '<div class="skeleton-block"></div>'
+        + '<div class="skeleton-block"></div>'
+        + '<div class="skeleton-block"></div>'
+        + '</div>';
     }
 
     function showError(msg) {
-      detailCont.innerHTML = '<div class="error-msg">' + msg + '</div>';
+      detailCont.innerHTML = '<div class="error-container">'
+        + '<span class="error-icon">' + '\u26A0\uFE0F' + '</span>'
+        + '<span class="error-text">' + escapeHtml(msg) + '</span>'
+        + '</div>';
     }
 
     // =====================================================================
@@ -530,10 +691,16 @@
         console.warn  = originalConsole.warn;
 
         // 8. Render captured logs
+        const panelContent = document.createElement("div");
+        panelContent.className = "console-panel-body";
+
         if (capturedLogs.length === 0) {
-          pre.innerHTML = '<span class="log-line" style="color:#888;">(no output)</span>';
+          panelContent.innerHTML = '<div class="console-no-output">'
+            + '<span class="no-output-icon">' + '\u2328\uFE0F' + '</span>'
+            + '<span class="no-output-text">No output to display</span>'
+            + '</div>';
         } else {
-          pre.innerHTML = capturedLogs.map((entry) => {
+          panelContent.innerHTML = capturedLogs.map((entry) => {
             const text = entry.args.map((a) => {
               if (typeof a === "object") {
                 try { return JSON.stringify(a, null, 2); }
@@ -547,6 +714,14 @@
               + '</span>';
           }).join("\n");
         }
+
+        // Build panel with header
+        const header = document.createElement("div");
+        header.className = "console-panel-header";
+        header.textContent = "Console Output";
+
+        pre.appendChild(header);
+        pre.appendChild(panelContent);
 
         wrapper.appendChild(pre);
 
