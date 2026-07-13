@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    h1, p { font-family: Lato; }
+    .grid { display: grid; grid-template-rows: 100px 100px 100px; grid-template-columns: 100px 100px 100px; }
+    .box { border: 1px solid black; line-height: 100px; text-align: center; }
+    .reset { margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (async function() {
+      const resp = await fetch("index.js");
+      let source = await resp.text();
+
+      // 1. Strip React/react-dom imports
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react["'];?\n?/g, "");
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react-dom["'];?\n?/g, "");
+      source = source.replace(/import\s+React\b[^;]*from\s+["']react["'];?\n?/g, "");
+
+      // 2. Strip CSS imports
+      source = source.replace(/import\s+["']\.\/[^"']+\.css["'];?\n?/g, "");
+
+      // 3. Strip local module imports
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+"['];?\n?/g, "");
+
+      // 4. Strip "const { ... } = React;" (React is already global)
+      source = source.replace(/const\s+\{[^}]+\}\s*=\s*React;?\n?/g, "");
+
+      // 5. Strip export default
+      source = source.replace(/export\s+default\s+function\s+(\w+)/g, "window._component = $1; function $1");
+      source = source.replace(/export\s+default\s+(\w+)\s*;?/g, "window._component = $1;");
+
+      // 6. Transpile with Babel
+      const result = Babel.transform(source, { presets: ["react"] });
+      (new Function(result.code))();
+
+      // 7. Render
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(window._component));
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collapse</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; }
+    h4 { border: 1px solid #ccc; }
+    .wrapper { width: 90%; margin: 20px auto; }
+    section { margin-bottom: -1px; }
+    article { border: 1px solid #ccc; border-top: none; overflow: hidden; height: 0; transition: height 0.2s ease; }
+    .hide { border: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (async function() {
+      const resp = await fetch("index.js");
+      let source = await resp.text();
+
+      // 1. Strip React/react-dom imports
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react["'];?\n?/g, "");
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react-dom["'];?\n?/g, "");
+      source = source.replace(/import\s+React\b[^;]*from\s+["']react["'];?\n?/g, "");
+
+      // 2. Strip CSS imports
+      source = source.replace(/import\s+["']\.\/[^"']+\.css["'];?\n?/g, "");
+
+      // 3. Strip local module imports
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+"['];?\n?/g, "");
+
+      // 4. Keep "const { ... } = React;" — collapse uses bare hook names (useState, useRef, etc.)
+      //    so we do NOT strip this line. Instead strip only the import-level conflicts.
+      //    (The import already stripped in step 1.)
+
+      // 5. Strip export default
+      source = source.replace(/export\s+default\s+function\s+(\w+)/g, "window._component = $1; function $1");
+      source = source.replace(/export\s+default\s+(\w+)\s*;?/g, "window._component = $1;");
+
+      // 6. Collapse special: replace render(<App />, document.getElementById("root"))
+      source = source.replace(
+        /render\(\s*<App\s*\/>\s*,\s*document\.getElementById\(["']root["']\)\s*\);?/g,
+        "window._component = App;"
+      );
+
+      // 7. Transpile with Babel
+      const result = Babel.transform(source, { presets: ["react"] });
+      (new Function(result.code))();
+
+      // 8. Render
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(window._component));
+    })();
+  </script>
+</body>
+</html>

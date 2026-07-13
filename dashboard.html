@@ -296,10 +296,6 @@
     }
   </style>
 
-  <!-- React / Babel CDN (for React examples) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
 </head>
 <body>
 
@@ -405,7 +401,7 @@
 
       switch (ex.type) {
         case "vanilla": loadVanilla(ex); break;
-        case "react":   loadReact(ex);   break;
+        case "react":   loadVanilla(ex); break;
         case "console": loadConsole(ex); break;
         default:        showError("Unknown example type: " + ex.type);
       }
@@ -443,182 +439,6 @@
         iframe.src = "about:blank";
         iframe.remove();
       };
-    }
-
-    // =====================================================================
-    // STRATEGY 2: REACT (CDN Babel standalone)
-    // =====================================================================
-    async function loadReact(ex) {
-      showLoading();
-
-      try {
-        // 1. Fetch main source
-        const srcResponse = await fetch(ex.dir + "/index.js");
-        if (!srcResponse.ok) throw new Error("Failed to load source: " + srcResponse.status);
-        let source = await srcResponse.text();
-
-        // 2. Collect CSS imports BEFORE stripping
-        const cssFiles = [];
-        source = source.replace(
-          /import\s+["']\.\/([^"']+\.css)["'];?/g,
-          (match, cssFile) => { cssFiles.push(cssFile); return ""; }
-        );
-
-        // 3. Collect and inline local module imports BEFORE stripping
-        const localModules = {};
-        const localImportRx = /import\s+\{([^}]*)\}\s*from\s+["']\.\/([^"']+)["'];?/g;
-        const localMatches = [...source.matchAll(localImportRx)];
-
-        for (const m of localMatches) {
-          let modPath = m[2];
-          if (!modPath.endsWith(".js") && !modPath.endsWith(".css")) {
-            modPath += ".js";
-          }
-          if (!localModules[modPath]) {
-            try {
-              const modResp = await fetch(ex.dir + "/" + modPath);
-              if (modResp.ok) {
-                localModules[modPath] = await modResp.text();
-              }
-            } catch (e) { console.warn("Could not fetch module:", modPath); }
-          }
-        }
-
-        // 4. Transform named React imports → destructuring from global React
-        //    import { useState, useRef } from "react" → const { useState, useRef } = React;
-        //    import React, { useState } from "react" → const { useState } = React;
-        source = source.replace(
-          /import\s+(?:React\s*,\s*)?\{([^}]*)\}\s*from\s+["']react["'];?\n?/g,
-          (match, names) => {
-            const destructured = names.trim().split(',').map(n => n.trim()).filter(Boolean).join(', ');
-            return 'const { ' + destructured + ' } = React;\n';
-          }
-        );
-
-        // 4a. Deduplicate: if step4 produced a name already destructured by a
-        //     later `const { ... } = React;` line in the source, drop it from
-        //     step4's line (avoids SyntaxError from duplicate const declarations).
-        source = source.replace(
-          /const \{ ([^}]+) \} = React;\s*\n?/g,
-          (match, names, offset, fullSource) => {
-            const remainder = fullSource.slice(offset + match.length);
-            const laterMatch = remainder.match(/const \{ ([^}]+) \} = React;/);
-            if (!laterMatch) return match;
-            const laterNames = laterMatch[1].split(',').map(n => n.trim()).filter(Boolean);
-            const currentNames = names.split(',').map(n => n.trim()).filter(Boolean);
-            const filtered = currentNames.filter(n => !laterNames.includes(n));
-            if (filtered.length === 0) return '';
-            return 'const { ' + filtered.join(', ') + ' } = React;\n';
-          }
-        );
-
-        // 5. Strip remaining import statements (default React imports, local modules, CSS)
-        source = source.replace(/import\s+[^\n]+\n?/g, "\n");
-
-        // 6. Special case: user-form uses SEX_OPTIONS from constant.js but
-        //    doesn't import it. Reconstruct all constants inline.
-        if (ex.dir === "user-form" && localModules["constant.js"]) {
-          const constSource = localModules["constant.js"]
-            .replace(/export\s+/g, "")
-            .replace(/const\s+/g, "var ");
-          source = constSource + "\n" + source;
-        }
-
-        // 7. Special case: todo-ai uses constants from ./constants.js
-        if (ex.dir === "todo-ai" && localModules["constants.js"]) {
-          const constSource = localModules["constants.js"]
-            .replace(/export\s+/g, "")
-            .replace(/const\s+/g, "var ");
-          source = constSource + "\n" + source;
-        }
-
-        // 8. Inject CSS
-        let cssText = "";
-        for (const cssFile of cssFiles) {
-          let actualFile = cssFile;
-          // infinity_scroll imports "styles.css" but file is "style.css"
-          if (ex.dir === "infinity_scroll" && cssFile === "styles.css") {
-            actualFile = "style.css";
-          }
-          try {
-            const cssResp = await fetch(ex.dir + "/" + actualFile);
-            if (cssResp.ok) cssText += await cssResp.text();
-          } catch (e) { console.warn("Could not load CSS:", actualFile); }
-        }
-
-        // 9. Strip export default — assign component to global
-        //    Pattern A: export default function/class Name -> window.__ExampleComponent = Name
-        source = source.replace(
-          /export\s+default\s+function\s+(\w+)/g,
-          "window.__ExampleComponent = $1; function $1"
-        );
-        source = source.replace(
-          /export\s+default\s+class\s+(\w+)/g,
-          "window.__ExampleComponent = $1; class $1"
-        );
-        //    Pattern B: export default Name; (e.g. five_stars_rating)
-        source = source.replace(
-          /export\s+default\s+(\w+)\s*;?/g,
-          "window.__ExampleComponent = $1;"
-        );
-
-        // 10. Handle collapse: replace `render(<App />, ...)` with ReactDOM.createRoot
-        if (ex.dir === "collapse") {
-          source = source.replace(
-            /render\(\s*<App\s*\/>\s*,\s*document\.getElementById\(["']root["']\)\s*\);?/g,
-            'const __root = ReactDOM.createRoot(document.getElementById("detail-view-container")); __root.render(React.createElement(App));\n'
-            + 'document.getElementById("detail-view-container")._reactRoot = __root;'
-          );
-        }
-
-        // 11. Build final source
-        let fullSource = "";
-        fullSource += "// === Injected CSS ===\n";
-        if (cssText) {
-          fullSource += 'const __style = document.createElement("style");\n';
-          fullSource += "__style.textContent = " + JSON.stringify(cssText) + ";\n";
-          fullSource += 'document.getElementById("detail-view-container").appendChild(__style);\n';
-        }
-        fullSource += "// === Local Modules ===\n";
-        if (ex.dir === "user-form" || ex.dir === "todo-ai") {
-          fullSource += "// (inlined above)\n";
-        }
-        fullSource += "// === Transformed Example Source ===\n";
-        fullSource += source;
-        fullSource += "\n// === Auto-render (non-collapse) ===\n";
-        if (ex.dir !== "collapse") {
-          fullSource += 'if (window.__ExampleComponent) {\n';
-          fullSource += '  const __root = ReactDOM.createRoot(document.getElementById("detail-view-container"));\n';
-          fullSource += '  document.getElementById("detail-view-container")._reactRoot = __root;\n';
-          fullSource += '  __root.render(React.createElement(window.__ExampleComponent));\n';
-          fullSource += "}\n";
-        }
-
-        // 12. Create container and inject Babel script
-        detailCont.innerHTML = '<div id="detail-view-container"></div>';
-
-        const script = document.createElement("script");
-        script.type = "text/babel";
-        script.setAttribute("data-presets", "react");
-        script.textContent = fullSource;
-        detailCont.appendChild(script);
-
-        currentCleanup = () => {
-          const container = document.getElementById("detail-view-container");
-          if (container) {
-            try {
-              const root = container._reactRoot;
-              if (root && root.unmount) root.unmount();
-            } catch (e) {}
-            container.innerHTML = "";
-          }
-          if (script.parentNode) script.remove();
-        };
-
-      } catch (err) {
-        showError("Failed to load React example: " + err.message);
-        console.error(err);
-      }
     }
 
     // =====================================================================

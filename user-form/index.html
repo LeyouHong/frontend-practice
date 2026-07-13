@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Form</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    const USERNAME = "username";
+    const AGE = "age";
+    const SEX = "sex";
+    const HOBBIES = "hobbies";
+    const HOBBY_OPTIONS = ["reading", "sports", "music", "coding"];
+    const SEX_OPTIONS = [
+      { value: "male", label: "Male" },
+      { value: "female", label: "Female" },
+      { value: "other", label: "Other" },
+    ];
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (async function() {
+      const resp = await fetch("index.js");
+      let source = await resp.text();
+
+      // 1. Strip React/react-dom imports
+      //    user-form uses bare hook names, add destructure after stripping
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react["'];?\n?/g, "const { useState } = React;\n");
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']react-dom["'];?\n?/g, "");
+      source = source.replace(/import\s+React\b[^;]*from\s+["']react["'];?\n?/g, "");
+
+      // 2. Strip CSS imports
+      source = source.replace(/import\s+["']\.\/[^"']+\.css["'];?\n?/g, "");
+
+      // 3. Strip local module imports (constants already inlined as <script>)
+      source = source.replace(/import\s+\{.*?\}\s*from\s+["']\.\/[^"']+"['];?\n?/g, "");
+
+      // 4. Strip export default (no const { } = React in this source, skip standard step4)
+      source = source.replace(/export\s+default\s+function\s+(\w+)/g, "window._component = $1; function $1");
+      source = source.replace(/export\s+default\s+(\w+)\s*;?/g, "window._component = $1;");
+
+      // 6. Transpile with Babel
+      const result = Babel.transform(source, { presets: ["react"] });
+      (new Function(result.code))();
+
+      // 7. Render
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(window._component));
+    })();
+  </script>
+</body>
+</html>
