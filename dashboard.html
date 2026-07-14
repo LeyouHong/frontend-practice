@@ -86,47 +86,56 @@
     .card .card-icon { font-size: 2rem; margin-bottom: 10px; }
     .card .card-name { font-size: 0.95rem; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
 
-    /* ===== Detail View ===== */
-    .detail-view {
-      display: none;
-      padding: 20px 40px 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .detail-view.active { display: block; }
-
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #0f172a;
-      color: #fff;
+    /* ===== Example Dialog ===== */
+    .example-dialog {
+      width: min(90vw, 960px);
+      max-height: 90vh;
+      margin: auto; /* the global * reset kills the UA centering margin */
       border: none;
-      padding: 10px 24px;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s ease, transform 0.15s ease;
+      border-radius: var(--card-radius);
+      padding: 0;
+      background: var(--color-surface);
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
     }
-    .back-btn:hover { background: #1e293b; transform: translateX(-2px); }
+    .example-dialog[open] {
+      display: flex;
+      flex-direction: column;
+    }
+    .example-dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
 
-    .detail-header {
+    .dialog-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
       gap: 12px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
     }
     .detail-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
 
+    .dialog-close {
+      border: none;
+      background: transparent;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .dialog-close:hover { background: #f1f5f9; color: var(--color-text); }
+
+    body.dialog-open { overflow: hidden; }
+
     .detail-container {
       background: #fff;
-      border-radius: 14px;
       padding: 24px;
       min-height: 400px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      overflow-y: auto;
     }
 
     .detail-container iframe {
@@ -290,8 +299,6 @@
       .header h1 { font-size: 1.2rem; }
       .header .subtitle { font-size: 0.8rem; }
       .card { padding: 24px 14px 18px; }
-      .detail-view { padding: 12px 16px 24px; }
-      .detail-header { flex-direction: column; align-items: flex-start; }
       .detail-container { padding: 16px; }
     }
   </style>
@@ -310,14 +317,14 @@
   <!-- ===== Dashboard Grid ===== -->
   <div id="dashboard-grid" class="dashboard-grid"></div>
 
-  <!-- ===== Detail View ===== -->
-  <div id="detail-view" class="detail-view">
-    <div class="detail-header">
-      <button id="back-btn" class="back-btn">&larr; Back to Dashboard</button>
+  <!-- ===== Example Dialog ===== -->
+  <dialog id="example-dialog" class="example-dialog">
+    <div class="dialog-header">
       <h2 id="detail-title" class="detail-title"></h2>
+      <button id="dialog-close" class="dialog-close" aria-label="Close">&times;</button>
     </div>
     <div id="detail-container" class="detail-container"></div>
-  </div>
+  </dialog>
 
   <script>
     // =====================================================================
@@ -347,8 +354,8 @@
     // DOM REFERENCES
     // =====================================================================
     const gridEl       = document.getElementById("dashboard-grid");
-    const detailEl     = document.getElementById("detail-view");
-    const backBtn      = document.getElementById("back-btn");
+    const dialogEl     = document.getElementById("example-dialog");
+    const closeBtn     = document.getElementById("dialog-close");
     const detailTitle  = document.getElementById("detail-title");
     const detailCont   = document.getElementById("detail-container");
 
@@ -378,25 +385,38 @@
 
     function showDetail(title) {
       detailTitle.textContent = title;
-      detailEl.classList.add("active");
+      dialogEl.showModal();
+      document.body.classList.add("dialog-open");
     }
 
-    function hideDetail() {
+    // Single teardown path: Escape (native cancel), the close button, and
+    // backdrop clicks all end in dialog.close(), which fires this handler.
+    dialogEl.addEventListener("close", () => {
       if (typeof currentCleanup === "function") {
         try { currentCleanup(); } catch (e) {}
         currentCleanup = null;
       }
       detailCont.innerHTML = "";
-      detailEl.classList.remove("active");
-    }
+      document.body.classList.remove("dialog-open");
+    });
 
-    backBtn.addEventListener("click", hideDetail);
+    closeBtn.addEventListener("click", () => dialogEl.close());
+
+    // With padding: 0, e.target === dialogEl only for clicks on the backdrop
+    dialogEl.addEventListener("click", (e) => {
+      if (e.target === dialogEl) dialogEl.close();
+    });
 
     // =====================================================================
     // DISPATCHER
     // =====================================================================
     function openExample(ex) {
-      hideDetail(); // clean up previous
+      // Defensive purge in case a previous example left anything behind
+      if (typeof currentCleanup === "function") {
+        try { currentCleanup(); } catch (e) {}
+        currentCleanup = null;
+      }
+      detailCont.innerHTML = "";
       showDetail(ex.name);
 
       switch (ex.type) {
